@@ -55,18 +55,22 @@
 
 项目地址：**<https://github.com/Freewind72/dsh-msapi>**
 
-```bash
-git clone https://github.com/Freewind72/dsh-msapi.git
-```
-
 DSH Desktop 的 `desktop` profile 只能通过图形界面装插件，CLI 会拒绝：
 
 1. 打开 **设置 → 插件**。
-2. 选择 **从本地目录安装**。
-3. 指向你克隆下来的那个目录。
-4. 启用后刷新页面（`Ctrl+R`）。
+2. 选择 **按包名安装**，填入：
 
-包发布之后，按包名安装也是一样的流程。
+   ```
+   github:Freewind72/dsh-msapi
+   ```
+
+3. 启用后刷新页面（`Ctrl+R`）。
+
+`github:owner/repo` 是插件管理器直接交给 pnpm 的简写，会从仓库拉取 —— 不需要先发布到 npm。
+发布之后按包名安装也是一样的流程。
+
+想用本地检出目录的话，改用 **从本地目录安装** 指向你的克隆；
+代价是以后加依赖得自己跑 `pnpm install`。
 
 **改过 `lib/` 下任何文件后必须重启 DSH**（不是刷新页面），因为宿主在启动时读取并缓存客户端 bundle。
 

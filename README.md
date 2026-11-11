@@ -57,18 +57,22 @@ current window. No extra browser tab, no window switching, no separate player to
 
 The project lives at **<https://github.com/Freewind72/dsh-msapi>**.
 
-```bash
-git clone https://github.com/Freewind72/dsh-msapi.git
-```
-
 The DSH Desktop `desktop` profile installs plugins through the GUI only — the CLI refuses it:
 
 1. Open **Settings → Plugins**.
-2. Choose **install from a local directory**.
-3. Point it at the directory you cloned into.
-4. Enable it, then reload the page (`Ctrl+R`).
+2. Choose **install by package**, and give it:
 
-Installing by package name works the same way once the package is published.
+   ```
+   github:Freewind72/dsh-msapi
+   ```
+
+3. Enable it, then reload the page (`Ctrl+R`).
+
+`github:owner/repo` is the shorthand the plugin manager hands to pnpm, so it fetches the repository
+directly — no npm publish needed. A published package name would work the same way.
+
+Working on a local checkout instead? Use **install from a local directory** and point it at your
+clone; the trade-off is that you have to run `pnpm install` yourself if you ever add a dependency.
 
 A restart of DSH — not just a page reload — is required after changing any file in `lib/`, because
 the host reads and caches the client bundle at startup.
