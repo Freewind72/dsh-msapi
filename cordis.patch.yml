@@ -1,0 +1,12 @@
+# dsh-msapi — bundle patch layer
+#
+# One loader row: this package's own host half (lib/index.js). It registers the
+# two same-origin routes the Settings page talks to and serves the embed URL.
+# The browser half (lib/client.js) is mounted by the client module loader from
+# the `dsh.client` block in package.json — no row is needed for it.
+#
+# Nothing here reaches the network at boot: the host half only touches one JSON
+# file, so a slow or unreachable Msapi site can never hold up DSH startup.
+- insert:
+    - id: dsh-msapi
+      name: dsh-msapi
