@@ -53,11 +53,17 @@
 
 ## 安装
 
+项目地址：**<https://github.com/Freewind72/dsh-msapi>**
+
+```bash
+git clone https://github.com/Freewind72/dsh-msapi.git
+```
+
 DSH Desktop 的 `desktop` profile 只能通过图形界面装插件，CLI 会拒绝：
 
 1. 打开 **设置 → 插件**。
 2. 选择 **从本地目录安装**。
-3. 指向这个仓库，例如 `E:\Workbench\PhpStorm\dsh-msapi`。
+3. 指向你克隆下来的那个目录。
 4. 启用后刷新页面（`Ctrl+R`）。
 
 包发布之后，按包名安装也是一样的流程。

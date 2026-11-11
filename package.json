@@ -31,6 +31,14 @@
     "embed"
   ],
   "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Freewind72/dsh-msapi.git"
+  },
+  "homepage": "https://github.com/Freewind72/dsh-msapi#readme",
+  "bugs": {
+    "url": "https://github.com/Freewind72/dsh-msapi/issues"
+  },
   "engines": {
     "node": ">=22.12.0",
     "dsh": "^0.2.0-rc.1"

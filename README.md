@@ -55,11 +55,17 @@ current window. No extra browser tab, no window switching, no separate player to
 
 ## Install
 
+The project lives at **<https://github.com/Freewind72/dsh-msapi>**.
+
+```bash
+git clone https://github.com/Freewind72/dsh-msapi.git
+```
+
 The DSH Desktop `desktop` profile installs plugins through the GUI only — the CLI refuses it:
 
 1. Open **Settings → Plugins**.
 2. Choose **install from a local directory**.
-3. Point it at this repository, e.g. `E:\Workbench\PhpStorm\dsh-msapi`.
+3. Point it at the directory you cloned into.
 4. Enable it, then reload the page (`Ctrl+R`).
 
 Installing by package name works the same way once the package is published.
