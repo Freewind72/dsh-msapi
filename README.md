@@ -94,6 +94,13 @@ The status line reports one of:
 without saving them. **Turn on / Turn off** controls whether the player is mounted at all, so you
 can keep a key configured without a player on screen.
 
+### Self-hosting
+
+Prefer not to depend on the official site? [Shunya](https://github.com/Freewind72/Shunya) is the
+companion self-hosted server — run your own Msapi instance and point the plugin at
+`http://127.0.0.1:port`. Loopback and private addresses are allowed; the probe only refuses
+link-local targets such as cloud metadata endpoints (see [Security](#security)).
+
 ## Where state lives
 
 ```
