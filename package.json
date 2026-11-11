@@ -14,7 +14,6 @@
     "lib",
     "cordis.patch.yml",
     "icon.svg",
-    "icon.png",
     "README.md",
     "README.zh.md",
     "CHANGELOG.md",
@@ -30,7 +29,7 @@
     "aplayer",
     "embed"
   ],
-  "license": "PolyForm-Noncommercial-1.0.0",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Freewind72/dsh-msapi.git"

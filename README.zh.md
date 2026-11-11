@@ -309,6 +309,4 @@ lib/
 
 ## 许可
 
-**禁止盈利**（[PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0)）。
-可以自由使用、研究、修改、分发；**但不允许出售，也不允许用它赚钱。**
-具有约束力的条款见本仓库的 [LICENSE](LICENSE)。
+[MIT](LICENSE)。可自由使用、研究、修改、分发 —— 包括商业用途。

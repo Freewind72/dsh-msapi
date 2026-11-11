@@ -328,6 +328,4 @@ is a plugin most people cannot patch.
 
 ## License
 
-**Non-commercial** ([PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0)).
-Free to use, study, modify and share; **selling it, or using it to make money, is not permitted.**
-The binding text is [LICENSE](LICENSE) in this repository.
+[MIT](LICENSE). Free to use, study, modify, share — including commercially.
