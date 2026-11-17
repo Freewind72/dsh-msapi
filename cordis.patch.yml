@@ -1,12 +1,12 @@
-# dsh-msapi — bundle patch layer
+# dsh-msapi —— bundle 补丁层
 #
-# One loader row: this package's own host half (lib/index.js). It registers the
-# two same-origin routes the Settings page talks to and serves the embed URL.
-# The browser half (lib/client.js) is mounted by the client module loader from
-# the `dsh.client` block in package.json — no row is needed for it.
+# 只有一行 loader：本包自己的宿主半边（lib/index.js）。它注册设置页要对话的那两个
+# 同源路由，并提供嵌入用的 URL。
+# 浏览器半边（lib/client.js）由客户端模块加载器依据 package.json 里的
+# `dsh.client` 块挂载 —— 它不需要任何 loader 行。
 #
-# Nothing here reaches the network at boot: the host half only touches one JSON
-# file, so a slow or unreachable Msapi site can never hold up DSH startup.
+# 这里在启动时完全不碰网络：宿主半边只读写一个 JSON 文件，所以 Msapi 站点再慢、
+# 再不可达，也不可能拖慢或卡住 DSH 的启动。
 - insert:
     - id: dsh-msapi
       name: dsh-msapi

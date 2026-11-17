@@ -1,29 +1,29 @@
-# Dependencies
+# 依赖目录
 node_modules/
 .pnpm-store/
 .npm/
 
-# Package-manager logs
+# 包管理器日志
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Packed tarballs (npm pack / pnpm pack output)
+# 打包产物（npm pack / pnpm pack 的输出）
 *.tgz
 
-# Tool caches and coverage output
+# 工具缓存与覆盖率输出
 .cache/
 coverage/
 .nyc_output/
 .eslintcache
 
-# Local environment and secrets
+# 本地环境变量与密钥
 .env
 .env.*
 !.env.example
 
-# Editors
+# 编辑器
 .idea/
 *.iml
 .vscode/
@@ -31,7 +31,7 @@ coverage/
 *.swo
 *~
 
-# Operating system junk
+# 操作系统垃圾文件
 .DS_Store
 Thumbs.db
 Desktop.ini
