@@ -1,319 +1,297 @@
 # dsh-msapi
 
-English | [中文](README.zh.md)
-
-Embeds the [Msapi](https://msapi.bmwy72.top) music player into DeepSeek Harness. Fill in two
-fields on **Settings → Music Player** — a site URL and an API key — and the player docks onto the
-current window. No extra browser tab, no window switching, no separate player to babysit.
+把 [Msapi](https://msapi.bmwy72.top) 的音乐播放器嵌进 DeepSeek Harness。
+在 **设置 → 音乐播放器** 里填两个字段 —— 服务地址和接口密钥 —— 播放器就挂在当前窗口上。
+不用开额外的浏览器标签页，不用切窗口，也没有单独一个播放器要照看。
 
 ```
-┌─ Music Player ────────────────────────────────────────┐
-│  Site URL                                             │
+┌─ 音乐播放器 ──────────────────────────────────────────┐
+│  服务地址                                             │
 │  ┌─────────────────────────────────────────────────┐  │
 │  │ https://msapi.bmwy72.top                        │  │
 │  └─────────────────────────────────────────────────┘  │
-│  Leave empty to use the official site                 │
+│  留空使用官方地址                                     │
 │                                                       │
-│  API key                                              │
+│  接口密钥                                             │
 │  ┌─────────────────────────────────────────────────┐  │
 │  │ ••••••••••••••••••••••••                        │  │
 │  └─────────────────────────────────────────────────┘  │
-│  Stored · fingerprint a1b2c3d4 · 32 chars             │
+│  已保存 · 指纹 a1b2c3d4 · 32 位                       │
 │                                                       │
-│  ● Connected · 3 playlists · 128 songs · 182ms        │
-│                            [Save] [Test] [Turn off]   │
+│  ● 连接正常 · 歌单 3 · 歌曲 128 · 182ms                │
+│                            [保存] [测试] [关闭播放器] │
 └───────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Contents
+## 目录
 
-- [What it does](#what-it-does)
-- [Install](#install)
-- [Configuration](#configuration)
-- [Where state lives](#where-state-lives)
-- [How it works](#how-it-works)
-- [Security](#security)
-- [Known limits](#known-limits)
-- [Troubleshooting](#troubleshooting)
-- [Development](#development)
-- [License](#license)
+- [它做什么](#它做什么)
+- [安装](#安装)
+- [配置](#配置)
+- [数据放在哪](#数据放在哪)
+- [它是怎么实现的](#它是怎么实现的)
+- [安全](#安全)
+- [已知限制](#已知限制)
+- [故障排查](#故障排查)
+- [开发](#开发)
+- [许可](#许可)
 
-## What it does
+## 它做什么
 
-- Adds a **Music Player** tab to the Settings sidebar. That page has exactly **two inputs** — a
-  site URL and an API key — plus buttons and one status line.
-- An empty URL means the official site, `https://msapi.bmwy72.top`.
-- Saving probes the site once and reports, on one line, whether the gateway answered, whether the
-  key was accepted, and how many playlists and songs the account holds.
-- With a valid key and the player switched on, the Msapi embed script is injected and the player
-  appears at the bottom right, just above the composer.
-- The player's own immersive mode fills **the viewport this plugin hands it**, not the whole screen.
-- Volume, playback mode, the last song and the resume position survive a DSH restart — which they
-  do not do on their own inside the desktop shell. See [Where state lives](#where-state-lives).
+- 在设置侧边栏加一个 **音乐播放器** 标签页。页里严格只有 **两个输入框** —— 服务地址和接口密钥 ——
+  其余是按钮和一行状态。
+- 地址留空表示官方站 `https://msapi.bmwy72.top`。
+- 保存时探测一次，用一行字说明：网关通不通、密钥收不收、账号下有几个歌单几首歌。
+- 密钥有效且播放器开着时，注入 Msapi 的嵌入脚本，播放器出现在右下角、输入框上方。
+- 播放器自己的沉浸模式铺满的是 **插件给它的视口**，不是整个屏幕。
+- 音量、播放模式、上次那首歌、播放进度能跨 DSH 重启保留 —— 在桌面外壳里它们本来保不住，
+  见 [数据放在哪](#数据放在哪)。
 
-## Install
+## 安装
 
-The project lives at **<https://github.com/Freewind72/dsh-msapi>**.
+项目地址：**<https://github.com/Freewind72/dsh-msapi>**
 
-The DSH Desktop `desktop` profile installs plugins through the GUI only — the CLI refuses it:
+DSH Desktop 的 `desktop` profile 只能通过图形界面装插件，CLI 会拒绝：
 
-1. Open **Settings → Plugins**.
-2. Choose **install by package**, and give it:
+1. 打开 **设置 → 插件**。
+2. 选择 **按包名安装**，填入：
 
    ```
    github:Freewind72/dsh-msapi
    ```
 
-3. Enable it, then reload the page (`Ctrl+R`).
+3. 启用后刷新页面（`Ctrl+R`）。
 
-`github:owner/repo` is the shorthand the plugin manager hands to pnpm, so it fetches the repository
-directly — no npm publish needed. A published package name would work the same way.
+`github:owner/repo` 是插件管理器直接交给 pnpm 的简写，会从仓库拉取 —— 不需要先发布到 npm。
+发布之后按包名安装也是一样的流程。
 
-Working on a local checkout instead? Use **install from a local directory** and point it at your
-clone; the trade-off is that you have to run `pnpm install` yourself if you ever add a dependency.
+想用本地检出目录的话，改用 **从本地目录安装** 指向你的克隆；
+代价是以后加依赖得自己跑 `pnpm install`。
 
-A restart of DSH — not just a page reload — is required after changing any file in `lib/`, because
-the host reads and caches the client bundle at startup.
+**改过 `lib/` 下任何文件后必须重启 DSH**（不是刷新页面），因为宿主在启动时读取并缓存客户端 bundle。
 
-## Configuration
+## 配置
 
-| Field | Meaning |
+| 字段 | 含义 |
 |---|---|
-| **Site URL** | The site **root**, e.g. `https://msapi.bmwy72.top`. Empty = official site, also used when the field is left blank. A full endpoint such as `https://x.top/admin/api/api.php` is trimmed back to its root automatically. |
-| **API key** | The key from the Msapi admin **Keys** page. After saving, the browser only ever sees a fingerprint. |
+| **服务地址** | 站点**根**，例如 `https://msapi.bmwy72.top`。留空 = 官方站。粘贴完整端点（如 `https://x.top/admin/api/api.php`）会自动截回根。 |
+| **接口密钥** | Msapi 后台 **密钥** 页里的 key。保存后浏览器只拿得到指纹。 |
 
-The status line reports one of:
+状态行会给出其中一种结论：
 
-- `Connected · 3 playlists · 128 songs · 182ms`
-- `The key is not valid` / `The key is disabled` / `The gateway received no key`
-- `Cannot reach the server`
+- `连接正常 · 歌单 3 · 歌曲 128 · 182ms`
+- `密钥无效` / `密钥已被停用` / `网关没收到密钥`
+- `连不上服务器`
 
-**Save** writes the settings and probes once. **Test** probes the values currently in the fields
-without saving them. **Turn on / Turn off** controls whether the player is mounted at all, so you
-can keep a key configured without a player on screen.
+**保存** 写入配置并探测一次。**测试** 探测输入框里当前的值但不保存。
+**开启 / 关闭播放器** 控制播放器挂不挂载 —— 可以留着密钥但不让播放器出现在屏幕上。
 
-### Self-hosting
+### 自托管
 
-Prefer not to depend on the official site? [Shunya](https://github.com/Freewind72/Shunya) is the
-companion self-hosted server — run your own Msapi instance and point the plugin at
-`http://127.0.0.1:port`. Loopback and private addresses are allowed; the probe only refuses
-link-local targets such as cloud metadata endpoints (see [Security](#security)).
+不想依赖官方站？[Shunya](https://github.com/Freewind72/Shunya) 是配套的自托管服务端 ——
+自己搭一个 Msapi，插件里填 `http://127.0.0.1:端口` 即可。loopback 与私网地址都是允许的
+（探测只拦截云元数据等 link-local 地址，见[安全](#安全)）。
 
-## Where state lives
+## 数据放在哪
 
 ```
-$DSH_HOME/dsh-msapi/config.json      (mode 0600)
+$DSH_HOME/dsh-msapi/config.json      （权限 0600）
 ```
 
-One file only:
+只有一个文件：
 
 ```jsonc
 {
   "schemaVersion": 1,
-  "url": "",                                  // as typed; "" means the official site
-  "key": "…",                                 // never sent back to the browser
-  "gatewayPath": "/admin/api/api.php",        // the path that last answered
+  "url": "",                                  // 原样保存；"" 表示官方站
+  "key": "…",                                 // 永不回传浏览器
+  "gatewayPath": "/admin/api/api.php",        // 上次应答成功的路径
   "enabled": true,
-  "updatedAt": "2026-11-11T09:33:49.745Z",    // when the file was last written
-  "lastProbe": { "…": "…" },                  // so the page can show a status line at load
-  "playerState": {                            // the emulated cookie jar
+  "updatedAt": "2026-11-11T09:33:49.745Z",    // 文件最后一次写入的时间
+  "lastProbe": { "…": "…" },                  // 让页面一打开就有状态行
+  "playerState": {                            // 模拟出来的 cookie 罐子
     "mapi_cookie_consent": "granted",
     "mapi_state_dsh-msapi": "{\"v\":2,…}"
   }
 }
 ```
 
-Writes are atomic (`.tmp` → rename), so a crash mid-write leaves the previous file intact. A file
-that fails to parse is renamed to `config.json.corrupt-<timestamp>` and defaults take over — a
-half-written file must never wedge the plugin.
+写入是原子的（`.tmp` → rename），写到一半崩溃不会留下截断的文件。
+解析失败的文件会改名成 `config.json.corrupt-<时间戳>` 并回落默认值 —— 一个坏文件绝不该卡死插件。
 
-Deliberately **not** used for storage:
+刻意 **不用** 的存储位置：
 
-- **`cordis.patch.yml`** — DSH treats that document as shareable. A secret does not belong there.
-- **`localStorage`** — scoped to an origin, and an origin includes the port.
-- **Cookies** — see below.
+- **`cordis.patch.yml`** —— DSH 认为那份文档可以同步、可以分享，密钥不该出现在那里。
+- **`localStorage`** —— 按 origin 隔离，而 origin 含端口。
+- **cookie** —— 见下。
 
-### Why the player's memory cannot use cookies
+### 播放器的记忆为什么不能用 cookie
 
-The player keeps everything in `document.cookie`: `core/state.js` writes `mapi_state_<instance>`,
-and `core/auth.js` reads `mapi_cookie_consent` before it will boot at all.
+播放器把一切都存在 `document.cookie` 里：`core/state.js` 写 `mapi_state_<实例>`，
+`core/auth.js` 读 `mapi_cookie_consent`，没有它甚至不会启动。
 
-**Cookies do not work on the `dsh-app://` scheme the desktop shell serves the UI from.** Assignment
-is silently ignored and the getter always returns `""` — no error, no warning. A diagnostics report
-from a live page settled it: `href: "dsh-app://app/"`, an empty jar, the player running happily.
+**而桌面外壳加载界面用的 `dsh-app://` 协议下 cookie 完全不工作。**
+赋值被静默忽略，读取永远返回空串 —— 不报错、不警告。一份来自真实页面的诊断报告确认了这点：
+`href: "dsh-app://app/"`，罐子是空的，播放器却跑得好好的。
 
-So the jar is emulated. The plugin replaces the player's own cookie seam:
+所以罐子是模拟出来的。插件接管了播放器自己的 cookie 接口：
 
 ```js
-MP._.setCookie / getCookie / delCookie   ← redirected to an in-memory jar
+MP._.setCookie / getCookie / delCookie   ← 重定向到内存里的罐子
 ```
 
-Every part of the player (`state.js`, `auth.js`, `theme.js`) already goes through those three, so
-redirecting them is enough and the player's code is untouched. The durable copy lives in
-`config.json` under `playerState`:
+播放器的每个模块（`state.js`、`auth.js`、`theme.js`）本来就只经过这三个函数，
+所以接管它们就够了，播放器的代码一行都不用改。持久副本放在 `config.json` 的 `playerState` 里：
 
-- before booting the player the page calls `GET /dsh-msapi/state` and refills the jar, so
-  `loadState` sees what looks like a cookie it just wrote itself;
-- afterwards it pushes changes on a 4s tick and on `pagehide`, and **only when the jar is dirty** —
-  the player rewrites its cookie as often as twice a second, so a naive timer would flood the host;
-- the browser sends its whole jar, and the host **replaces** rather than merges, so a cookie the
-  player deleted actually disappears.
+- 启动播放器**之前**，页面先 `GET /dsh-msapi/state` 把罐子灌回去，
+  于是 `loadState` 读到的就像它自己刚写下的 cookie；
+- 之后每 4 秒 + `pagehide` 时把变更推回去，且 **只在罐子变脏时** ——
+  播放器边播边改写，最快每秒两次，天真的定时器会把宿主淹掉；
+- 浏览器发送的是**整个罐子**，宿主做的是**替换而不是合并**，
+  所以播放器删掉的 cookie 是真的会消失。
 
-#### The consent cookie is the master switch
+#### 同意 cookie 是总闸门
 
-`api.php` boots as `verifyKey → showConsentBanner(callback) → get-config`. An unanswered cookie
-banner therefore does not merely switch persistence off — it **stops the player from loading at
-all**, playlists included.
+`api.php` 的启动顺序是 `verifyKey → showConsentBanner(callback) → get-config`。
+所以横幅没被回答时，不只是不记录 —— **播放器根本起不来**，连歌单都拉不到。
 
-With the bridge in place the banner reads the emulated jar, which already says `granted`, so it
-never renders. If one was on screen before the bridge landed, the 4s tick accepts it on the user's
-behalf. Only ever *accept*: silently answering "deny" would be worse than leaving the question
-open.
+接管之后横幅读到的是模拟罐子里的 `granted`，因此它不会出现。
+万一在接管生效之前已经渲染出来了，4 秒轮询会替用户点掉。
+只点「同意」，绝不点「拒绝」—— 替你选拒绝比把问题留着更糟。
 
-## How it works
+## 它是怎么实现的
 
-The interesting part is the viewport, because the player was written to own the whole screen.
+有意思的部分是视口，因为播放器当初是按「拥有整个屏幕」写的。
 
-### The viewport
+### 视口
 
-The player's host element is moved into a container this plugin owns. That container sets
-`transform`, which makes it the **containing block** for every `position: fixed` descendant — so
-the player's idea of "the screen" becomes this box, and the plugin decides its size.
-`isolation: isolate` keeps the player's `z-index: 2147483647` from climbing over DSH's dialogs.
+播放器的宿主元素被移进一个插件自己创建的容器。这个容器设了 `transform`，
+于是它成了所有 `position: fixed` 后代的**包含块** ——
+播放器眼里「整个屏幕」变成了这个盒子，尺寸由插件说了算。
+`isolation: isolate` 把它那个 `z-index: 2147483647` 关在自己层里，不会爬到 DSH 的对话框上面。
 
-### Clearing the caption bar
+### 避开标题栏
 
-DSH Desktop draws minimise / maximise / close *inside* the window, so the container must not run to
-the very top.
+DSH Desktop 把最小化 / 最大化 / 关闭画在窗口**内部**，所以容器不能铺到最顶上。
 
-The clearance is **measured in JavaScript**, not hardcoded. DSH's `lib/preload-app.cjs` writes:
+留白高度是 **由 JavaScript 实测**的，不是写死的。DSH 的 `lib/preload-app.cjs` 会写：
 
 ```js
 root.dataset.windowsTitlebar = "";
 root.style.setProperty("--dsh-windows-titlebar-height", "40px");
 ```
 
-The plugin reads that inline property, falls back to the marker attribute (Windows 40px, macOS
-48px, fullscreen 0), and writes the result as an **inline** `--dms-top-clear` on the container. An
-earlier version derived it purely in CSS; when the selector missed, the entire `clip-path` was
-dropped and the player sat underneath the caption buttons.
+插件读这个内联变量，读不到就退回标记属性（Windows 40px / macOS 48px / 全屏 0），
+再把结果以**内联** `--dms-top-clear` 写到容器上。
+早先版本完全靠 CSS 选择器推导；选择器一旦没命中，整条 `clip-path` 就被丢弃，
+播放器直接压到标题栏按钮下面。
 
-`clip-path`, not a `top` inset: an inset only moves where the box starts, while a dragged player
-writes absolute coordinates and would still paint over the caption bar. Clipping removes that strip
-from painting *and* hit-testing without changing any child coordinate, so the player's own drag
-maths stays correct.
+用 `clip-path` 而不是 `top` 内缩：内缩只改变盒子起点，而播放器被拖动时会写绝对坐标，
+照样会画到标题栏上。裁剪则是从**绘制和点击**两方面都去掉那一条，且不改任何子元素坐标，
+所以播放器自己的拖拽计算不用动。
 
-Two things sit inside that clipped strip and need shifting down by the same amount, or they would
-be invisible:
+有两样东西就待在被裁掉的那一条里，必须跟着下移，否则就是看不见：
 
-- the player's toast layer, pinned at `top: 16px` — otherwise "the key is not valid" never shows;
-- the immersive layer's close button, which lives in a bar at `top: 0`.
+- 播放器的提示层，固定在 `top: 16px` —— 不移的话「密钥无效」永远不会显示；
+- 沉浸层的关闭按钮，在 `top: 0` 的那条横条里。
 
-### The immersive layer
+### 沉浸层
 
-That layer is inside a `attachShadow({mode: "closed"})` tree, which no outside selector can reach.
-What *is* reachable is the shadow root the player keeps on itself (`MP._hostRoot`), so the plugin
-appends a `<style>` there, moves the whole layer below the clearance, and re-applies the skin's own
-top padding to the close area so the button lands where its author intended.
+那一层在 `attachShadow({mode: "closed"})` 的树里，外部选择器完全够不着。
+够得着的是播放器自己保存的 shadow root（`MP._hostRoot`），
+所以插件往那里插一个 `<style>`，把整层移到留白之下，
+再把皮肤自己的顶部内边距补给关闭区域，让按钮落在皮肤作者预期的位置上。
 
-### The lyric strip
+### 歌词条
 
-The strip is attached to the host page's `body` (the skins use a closed shadow root, so core keeps
-it outside) and core sizes it as `span.scrollWidth + 42`. That 42 is 40px of horizontal padding plus
-a 2px breath, and it only equals the pill's *total* width under `box-sizing: border-box` — which
-Msapi's own stylesheet sets globally (`assets/css/pc.css`: `*, *::before, *::after`).
+歌词框挂在宿主页面的 `body` 上（皮肤是 closed shadow，core 只能把它放外面），
+宽度由 core 按 `span.scrollWidth + 42` 计算。这个 42 = 左右 padding 40 + 2px 余量，
+只有在 `box-sizing: border-box` 下才等于**药丸的总宽**
+—— 而 Msapi 自己的样式表正是全局这么设的（`assets/css/pc.css`：`*, *::before, *::after`）。
 
-Embedded in DSH the strip inherits no such reset, so the same `width` becomes a *content* width and
-40px of padding lands on top: the pill paints `scrollWidth + 82` wide against `scrollWidth + 42` of
-text. That surplus is the gap after the words, and the skewed ratio is what reads as "deformed".
-The plugin pins the strip back to `border-box` and leaves the skin's padding alone.
+嵌进 DSH 后它继承不到那条重置，同样的 `width` 变成了**内容宽**，再叠加 40px padding，
+药丸就画成 `scrollWidth + 82` 宽，文字却只有 `scrollWidth + 42`
+—— 右边多出的 40px 就是那段空白，宽高比失衡看起来就是「变形」。
+插件把它钉回 `border-box`，皮肤自己的 padding 一个字都不动。
 
-### Where the player area sits
+### 播放器区域的位置
 
-The area's top edge is pinned to the strip DSH reserves for its caption buttons. That height is
-measured on every mount, resize and fullscreen change, and the container is clipped there, so no
-part of the player can paint over the native minimise / maximise / close buttons. The edge cannot
-be moved by hand: there is no handle to drag, so nothing can be dragged over the player and hide
-it.
+区域顶边固定在 DSH 为标题栏按钮预留的那一条上。这个高度在每次挂载、改变窗口大小以及进出全屏时
+都会重新测量，容器按它裁剪，所以播放器不会有任何部分画到系统的最小化 / 最大化 / 关闭按钮上。
+这条边不提供手动调整：没有可拖拽的手柄，也就不会有东西被拖到播放器上把播放器盖掉。
 
-## Security
+## 安全
 
-**The key appears in the page as a `<script src>` query parameter.**
+**密钥会以查询参数的形式出现在页面的 `<script src>` 里。**
 
-That is the Msapi embedding contract — the official snippet is
-`<script src="https://site/api.php?key=YOUR_KEY"></script>`, and the player needs the key to call
-its own API. What this plugin does protect:
+这是 Msapi 嵌入契约本身决定的 —— 官方嵌入代码就是
+`<script src="https://站点/api.php?key=你的key"></script>`，播放器要靠这个 key 调自己的接口。
+本插件做到的防护是：
 
-- the key lives only in the local `config.json` (mode 0600);
-- the Settings page never echoes it — only the first 8 hex characters of its SHA-256;
-- `GET /dsh-msapi/settings` never returns it to the browser.
+- 密钥只存在于本机 `config.json`（权限 0600）；
+- 设置页永不回显，只给 SHA-256 前 8 位；
+- `GET /dsh-msapi/settings` 从不把密钥返回给浏览器。
 
-The `<script src>` line in the DOM is unavoidable, and any same-origin script or browser extension
-can read it. If that is unacceptable in your environment, do not enable the player there.
+但 DOM 里那行 `<script src>` 无法避免，任何同源脚本或浏览器扩展都能读到它。
+如果这在你所处的环境里不可接受，就不要在那里启用播放器。
 
-Also worth knowing:
+另外几点值得知道：
 
-- Mutations (`PUT`, `POST`) require the GUI's signed session cookie, the same gate
-  `dsh-windows-mcp` uses. A script, or a model with shell access, cannot repoint the player at a
-  site of its choosing.
-- The probe refuses link-local (`169.254.*`, `fe80:*`) and unique-local (`fc00::/7`) addresses. It
-  fetches from the host process, which sits behind no proxy, so an unrestricted URL field would be
-  an SSRF primitive against cloud metadata endpoints. Loopback and private ranges stay allowed on
-  purpose: a self-hosted Msapi on `http://127.0.0.1:8080` is a supported setup.
-- An unexpected 500 returns `internal error`, not the underlying message, which could carry a
-  filesystem path. The detail goes to the host log.
+- 写操作（`PUT`、`POST`）要求 GUI 的签名会话 cookie，与 `dsh-windows-mcp` 同一道门。
+  脚本或能执行 shell 的模型无法把播放器指到它自己选的站点上。
+- 探测会拒绝 link-local（`169.254.*`、`fe80:*`）和 unique-local（`fc00::/7`）地址。
+  它从宿主进程发起请求、中间没有代理，所以不加限制的 URL 字段就是一个打云元数据端点的 SSRF 缺口。
+  loopback 和私网**特意保留**：`http://127.0.0.1:8080` 自建 Msapi 是受支持的用法。
+- 意外的 500 只返回 `internal error`，不含底层消息（可能带文件路径）。细节写进宿主日志。
 
-## Known limits
+## 已知限制
 
-- **Domain authorization**: when Msapi binds a key to an allowed domain it judges the request by its
-  `Referer` / `Origin`. The page runs on the `dsh-app://` scheme, which normally sends neither, so
-  the check is skipped. Should that change and a request be refused as `domain_blocked`, add the
-  reported host on the Msapi Domains page.
-- **Renamed admin directory**: the gateway is probed as `/admin/api/api.php` then `/api/api.php`,
-  and the working path is remembered. The embed script needs no help — `api.php` injects the real
-  directory name itself.
-- **One site and one key at a time.**
-- **Not a general-purpose player**: it embeds Msapi, and inherits whatever Msapi supports.
+- **域名授权**：Msapi 给密钥绑定授权域名时，判定依据是请求的 `Referer` / `Origin`。
+  页面跑在 `dsh-app://` 协议下，通常不发这两个头，于是校验被跳过。
+  若某天它开始发送并被判 `domain_blocked`，在 Msapi 后台「域名」页加上被报出来的主机名即可。
+- **后台目录改名**：网关路径按 `/admin/api/api.php` → `/api/api.php` 顺序探测，成功后记住。
+  嵌入脚本不需要关心这件事 —— `api.php` 自己会注入真实目录名。
+- **一次只支持一个站点、一把密钥。**
+- **不是通用播放器**：它嵌的是 Msapi，能力上限由 Msapi 决定。
 
-## Troubleshooting
+## 故障排查
 
-**The plugin does not appear, and DSH says the package is invalid.**
-Almost always a **UTF-8 BOM** at the start of `package.json`. DSH loads it with a bare
-`JSON.parse(readFileSync(path, "utf8"))`, and a BOM makes that throw — reported as an invalid
-package, with every route 404 and no other clue. Check the first three bytes are not `EF BB BF`:
+**插件不出现，DSH 说包无效。**
+几乎总是 `package.json` 开头有 **UTF-8 BOM**。DSH 用裸 `JSON.parse(readFileSync(path, "utf8"))`
+读它，BOM 会让这句抛错 —— 报成无效包，所有路由 404，没有任何别的线索。
+检查前三个字节不是 `EF BB BF`：
 
 ```powershell
 [System.IO.File]::ReadAllBytes('package.json')[0..2] | % { $_.ToString('X2') }
 ```
 
-**Code changes have no effect, even after a page reload.**
-The host reads and caches the client bundle at startup, and the `?rev=` in the bundle URL is derived
-from file metadata at that moment. A page reload cannot pick up new code. Restart DSH.
+**改了代码毫无效果，刷新页面也没用。**
+宿主在启动时读取并缓存客户端 bundle，URL 里的 `?rev=` 也是那一刻按文件元数据算出来的。
+刷新页面拿不到新代码。必须重启 DSH。
 
-**The player overlaps the caption buttons.**
-`--dsh-windows-titlebar-height` was not readable. The plugin falls back to the
-`data-windows-titlebar` marker (40px), so this should not happen; if it does, report the value
-`document.documentElement.style.getPropertyValue("--dsh-windows-titlebar-height")` returns.
+**播放器压住了标题栏按钮。**
+说明 `--dsh-windows-titlebar-height` 没读到。插件会退回 `data-windows-titlebar` 标记（40px），
+理论上不该发生；真发生了请把
+`document.documentElement.style.getPropertyValue("--dsh-windows-titlebar-height")` 的值告诉我。
 
-**Volume, mode and resume position are forgotten.**
-Check the emulated jar actually holds something:
+**音量、模式、进度记不住。**
+先确认模拟罐子里真的有东西：
 
 ```powershell
 Get-Content "$env:USERPROFILE\.dsh\dsh-msapi\config.json" | Select-String playerState
 ```
 
-If `playerState` is `null`, the cookie bridge never ran. `GET /dsh-msapi/diagnostics` explains what
-the page observed — whether `apply` ran, how many embed scripts were injected, what the jar holds,
-and what the last host call returned.
+`playerState` 是 `null` 说明 cookie 接管从未跑起来。
+`GET /dsh-msapi/diagnostics` 会说明页面自己看到了什么 —— `apply` 有没有跑、注入了几个脚本、
+罐子里有什么、最后一次宿主调用返回了什么。
 
-**Nothing plays, but the status line says Connected.**
-The key is fine and the gateway answers; the problem is downstream. The player shows its own notice
-("no playlists yet", "the CDN is unreachable"), and those notices are what the top-clearance shift
-above exists to keep visible.
+**状态行显示「连接正常」但什么都不播。**
+密钥没问题、网关也应答了，问题在下游。播放器会弹自己的提示（「后台还没有歌单」「播放器资源加载失败」），
+上面那个顶部留白位移存在的意义，正是让这些提示看得见。
 
-## Development
+## 开发
 
 ```bash
 node --check lib/index.js
@@ -322,18 +300,17 @@ node --check lib/client.js
 
 ```
 lib/
-  index.js          host half: five routes, the auth gate, error shaping
-  config.js         config.json I/O, URL normalisation, host allow-list
-  msapi.js          one probe against a Msapi gateway
-  player-state.js   the emulated cookie jar
-  client.js         prebuilt browser bundle (settings page, viewport, patches)
+  index.js          宿主半边：五条路由、鉴权门、错误整形
+  config.js         config.json 读写、URL 归一化、主机白名单
+  msapi.js          对 Msapi 网关做一次探测
+  player-state.js   模拟的 cookie 罐子
+  client.js         预构建浏览器 bundle（设置页、视口、各种补丁）
 ```
 
-`lib/client.js` is a **prebuilt** browser bundle in the `window.__ModuleLoader__.load({...})` form,
-hand-written with `React.createElement` and no build step — the host serves built bundles as files,
-it does not compile them. Keeping it that way is deliberate: a plugin that needs a build toolchain
-is a plugin most people cannot patch.
+`lib/client.js` 是**预构建**的浏览器 bundle（`window.__ModuleLoader__.load({...})` 形式），
+用 `React.createElement` 手写、零构建步骤 —— 宿主直接按文件提供已构建的脚本，不做编译。
+这是有意的：需要一整套构建工具链的插件，大多数人都没法自己改。
 
-## License
+## 许可
 
-[MIT](LICENSE). Free to use, study, modify, share — including commercially.
+[MIT](LICENSE)。可自由使用、研究、修改、分发 —— 包括商业用途。

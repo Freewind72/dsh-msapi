@@ -1,194 +1,91 @@
-# Changelog
+# 变更日志
 
 ## 0.1.10
 
-- **The player area's top edge is fixed; the drag handle is gone.** 0.1.2 added a 10px handle
-  whose drag wrote the container's top clearance. Because the player docks near the bottom of
-  that same container, pulling the edge past the player's own top edge took the player out of
-  both painting and hit-testing — it simply vanished, and far enough down the immersive
-  layer's close button went with it. The edge is now derived from the caption strip alone, and
-  there is no handle, so nothing can be dragged over the player.
-- Clearance is still re-measured on mount, on resize, and when fullscreen or the titlebar
-  markers change.
-- Diagnostics report the applied `topClear` value instead of whether a handle exists.
+- **播放器区域的顶边固定，拖拽手柄删除。** 0.1.2 加过一根 10px 宽的手柄，拖动它会改写容器的顶部让开量。而播放器 dock 在同一个容器的靠下位置，所以把这条边拉到播放器自己的顶边以下时，播放器会同时退出绘制与命中测试——直接消失；拉得足够靠下，沉浸层的关闭键也会一起被裁掉。现在顶边只由标题栏条带推导，并且不存在手柄，因此没有任何东西能被拖到播放器上。
+- 让开量仍会在挂载、窗口尺寸变化、以及全屏或标题栏标记变化时重新测量。
+- 诊断信息改报实际生效的 `topClear` 值，不再报是否存在手柄。
+- **文档统一为中文。** `README.md` 就是中文版（内容即原 `README.zh.md`），英文 README 已删除，`package.json` 的 `files` 同步去掉 `README.zh.md`；`CHANGELOG.md` 与 GitHub 发行说明也改成纯中文。
 
 ## 0.1.9
 
-- Documentation rewritten from scratch, in two languages: `README.md` (English, the default) and
-  `README.zh.md`. Both are organised the same way and cross-linked, so a reader can switch without
-  losing their place.
-- New `LICENSE`, now **MIT** (see below for why it changed twice in this cycle).
-- The license is listed in `files`, so it travels with the published package.
-- The test directory was removed in this release; `scripts.test` and `scripts.nobom` went with it.
-- Install docs now use the `github:Freewind72/dsh-msapi` pnpm shorthand; `package.json` gained
-  `repository`, `homepage` and `bugs` pointing at the GitHub repository, and a Chinese
-  `description`.
-- Icon: added `icon.svg` (declared via `package.json` `icon`), dropped the unused `icon.png`.
-- **License history within this cycle**: started as a custom non-commercial text, then switched to
-  PolyForm Noncommercial 1.0.0 to get a GitHub license badge, then to **MIT**. The badge chase was
-  futile — GitHub's detection engine only matches the 47 permissive/copyleft templates in its
-  database, which contain no noncommercial license at all, so any such license shows as "Other"
-  regardless of format. MIT is now verbatim from the official template and `package.json` declares
-  the `MIT` SPDX identifier.
+- 文档从零重写，当时做成两种语言：`README.md`（英文，默认）与 `README.zh.md`。两份结构一致、互相互链，读者切换语言时不会丢位置。（0.1.10 已改为纯中文，见上一条。）
+- 新增 `LICENSE`，此时为 **MIT**（为什么这一轮里换了两次，见下）。
+- 许可文件列进了 `files`，所以它会跟着发布的包一起走。
+- 本版本删除了测试目录，`scripts.test` 与 `scripts.nobom` 一并移除。
+- 安装文档改用 `github:Freewind72/dsh-msapi` 这个 pnpm 简写；`package.json` 补上指向 GitHub 仓库的 `repository`、`homepage`、`bugs`，以及中文 `description`。
+- 图标：新增 `icon.svg`（通过 `package.json` 的 `icon` 声明），去掉未使用的 `icon.png`。
+- **本轮的许可变更史**：先是自定义的非商业文本，再换成 PolyForm Noncommercial 1.0.0 想拿 GitHub 的许可徽章，最后换成 **MIT**。追徽章这件事本身是徒劳的——GitHub 的识别引擎只匹配它库里的 47 个宽松/Copyleft 模板，其中根本没有非商业许可，所以这类许可无论怎么排版都只会显示成 "Other"。现在的 MIT 与官方模板逐字一致，`package.json` 声明 SPDX 标识 `MIT`。
 
 ## 0.1.8
 
-Two review passes over the whole plugin. Five real defects, all fixed:
+对整个插件做了两轮复查。查出五个真实缺陷，全部修掉：
 
-- **Deleted cookies came back.** The mirror sends the page's whole jar, but the host merged it into
-  the stored copy, so a cookie the player had deleted lived on in `config.json` and reappeared on the
-  next boot — the player's own `delCookie` (used when migrating its legacy cookies) never took
-  effect. The write is now `replace`: what the page sends *is* the jar.
-- **An empty jar was refused.** `sanitize({})` returned `null`, so clearing every cookie could never
-  be stored. An empty object is a legitimate write now; only a body with no recognisable key is
-  rejected.
-- **The cookie cap dropped at random.** With more than 32 entries the excess was cut by insertion
-  order, which follows whatever the player happened to write first — the state cookie could be the
-  one thrown away. The cap now ranks by importance, keeping `mapi_state_*` and the consent answer.
-- **Consent was never persisted on a first run.** `restorePlayerState` put `granted` into the jar by
-  assigning it directly, leaving the dirty flag clear, so the very first launch kept it in memory
-  only and asked again next time.
-- **SSRF through the settings URL.** `probe()` fetches from the host process, which sits behind no
-  proxy, so a request body could aim it at a cloud metadata endpoint and read the outcome back
-  through `latencyMs` and `message`. Link-local (`169.254.*`, `fe80:*`) and unique-local (`fc00::/7`)
-  addresses are refused now. Loopback and private ranges stay allowed on purpose: a self-hosted
-  Msapi on `http://127.0.0.1:8080` is a supported setup.
-- An unexpected 500 no longer returns the internal message to the page — it can hold a filesystem
-  path or a stack fragment. The detail goes to the host log instead.
-- **A BOM in `package.json` makes DSH reject the plugin outright.** The loader does a bare
-  `JSON.parse(readFileSync(path, "utf8"))`, a BOM survives that read, and the throw is reported as an
-  invalid package — with routes 404 and no other clue. It had crept in here. (A guard test was added
-  with this release and removed again in 0.1.9; see that entry.)
+- **被删掉的 cookie 会复活。** 镜像会把页面的整个 cookie 罐发上来，而宿主是把它**合并**进已存副本的，于是播放器已经删掉的 cookie 依旧活在 `config.json` 里，下次启动又冒出来——播放器自己的 `delCookie`（迁移历史遗留 cookie 时用的）等于从来没生效。现在写入语义改为 **replace**：页面发来的东西**就是**整个罐子。
+- **空罐子会被拒收。** `sanitize({})` 返回 `null`，所以“把所有 cookie 清空”这件事永远存不下去。现在空对象是合法写入，只拒绝没有任何可识别键的请求体。
+- **cookie 上限是随机砍的。** 超过 32 条时按插入顺序裁剪，而插入顺序取决于播放器先写了什么——状态 cookie 有可能就是被扔掉的那个。现在按重要性排序保留，优先保住 `mapi_state_*` 与同意票。
+- **首次运行时同意票从未落盘。** `restorePlayerState` 把 `granted` 直接赋值进罐子，脏标记没被置位，于是第一次启动它只留在内存里，下一次又要重新问一遍。
+- **设置里的 URL 可以打 SSRF。** `probe()` 是在宿主进程里发请求的，前面没有代理，所以请求体可以把目标指到云元数据端点，再通过 `latencyMs` 和 `message` 把结果读回来。现在拒绝 link-local（`169.254.*`、`fe80:*`）与 unique-local（`fc00::/7`）地址。环回与私网**故意继续放行**：把 Msapi 自建在 `http://127.0.0.1:8080` 是受支持的用法。
+- 意料之外的 500 不再把内部消息回给页面——里面可能有文件系统路径或堆栈片段。细节改为写进宿主日志。
+- **`package.json` 里的一个 BOM 会让 DSH 直接判插件无效。** 加载器做的是裸的 `JSON.parse(readFileSync(path, "utf8"))`，BOM 能活过这次读取，抛出的异常被报成“包无效”——路由全 404，且没有任何其它线索。这个 BOM 确实混进来过。（本版本加了一个防回归测试，0.1.9 又删掉了，见该条目。）
 
 ## 0.1.7
 
-- **Fixed the actual reason nothing was ever persisted: cookies do not work on `dsh-app://`.**
-  DSH Desktop serves the UI over a custom scheme, and there `document.cookie` is inert — the
-  assignment is silently ignored and the getter always returns `""`. A diagnostics report from a
-  live page settled it: `href: "dsh-app://app/"`, an empty cookie jar, the player running. The port
-  changing between launches was a red herring; the jar was empty within a single session too.
-- The player's own cookie seam is now replaced: `MP._.setCookie` / `getCookie` / `delCookie` are
-  redirected to an emulated jar. Every part of the player (`core/state.js`, `core/auth.js`,
-  `core/theme.js`) already goes through those three, so they all keep working untouched. Values stay
-  the player's own strings — it cannot tell this jar from a real one.
-- The jar is restored from the host **before** the embed script is appended, because `loadState`
-  reads it once while booting.
-- `GET/PUT /dsh-msapi/state` now store the whole jar as a name→value map, so a cookie the player
-  invents later is carried without a schema change. A `null` value deletes the entry, which honours
-  the player's own `delCookie`.
-- New `GET/PUT /dsh-msapi/diagnostics`: the browser reports what it observed — the scheme, whether
-  real cookies work, the emulated jar's names, whether the bridge is installed, the last host call's
-  status and body — into `diagnostics.json`. That report is what identified this bug.
+- **找到了“什么都没被持久化”的真正原因：`dsh-app://` 下 cookie 根本不工作。** DSH Desktop 用自定义协议提供界面，而在那里 `document.cookie` 是死的——赋值被静默忽略，getter 永远返回 `""`。一份来自真实页面的诊断报告把这件事钉死了：`href: "dsh-app://app/"`、cookie 罐为空、播放器却在正常运行。启动之间端口会变是条红鲱鱼；实际上在同一个会话内罐子照样是空的。
+- 现在把播放器自己的 cookie 接缝整个换掉：`MP._.setCookie` / `getCookie` / `delCookie` 被重定向到一个模拟 cookie 罐。播放器各处（`core/state.js`、`core/auth.js`、`core/theme.js`）本来就都走这三个函数，所以它们不用改就继续可用。存进去的值仍是播放器自己的字符串——它分辨不出这个罐子和真罐子。
+- 罐子在追加 embed 脚本**之前**就从宿主恢复，因为 `loadState` 在启动过程中只读一次。
+- `GET/PUT /dsh-msapi/state` 现在把整个罐子存成 name→value 的映射，因此播放器以后自己新造的 cookie 不需要改 schema 就能带着走。值为 `null` 表示删除该条目，这样播放器自己的 `delCookie` 才被尊重。
+- 新增 `GET/PUT /dsh-msapi/diagnostics`：浏览器把观察到的东西——协议、真 cookie 是否可用、模拟罐里的名字、桥是否装好、最后一次宿主调用的状态与响应体——写进 `diagnostics.json`。正是这份报告定位了这个 bug。
 
 ## 0.1.6
 
-> **Superseded diagnosis** — see the note under 0.1.5. The consent gate was real, but it was not what
-> kept the jar empty; `document.cookie` was already inert on this scheme. The consent work it
-> introduced still stands in 0.1.7.
+> **已被推翻的诊断** —— 见 0.1.5 下面的说明。同意闸门确实存在，但它并不是罐子为空的原因；在这个协议下 `document.cookie` 本来就是死的。它引入的同意相关改动在 0.1.7 里依然成立。
 
-- **Fixed: nothing was ever persisted, because the player never wrote a cookie to mirror.** The
-  consent cookie (`mapi_cookie_consent`) is what `showConsentBanner` checks before letting the boot
-  chain continue, and `api.php` runs `verifyKey → showConsentBanner(callback) → get-config` — so an
-  unanswered banner does not merely switch persistence off, it stops the player from loading at all.
-  Being host-only, that cookie died with the old port on every restart, which put the banner back
-  each launch. The plugin now grants consent and writes the cookie **before** the embed script, so
-  the banner never renders and `MP._cookieConsented` is never `false`.
-- Consent is mirrored to the host as well and replayed on the next boot, so the answer survives the
-  port change like the rest of the player's memory.
-- A refused or failed mirror write now clears the "already sent" marker, so the next tick retries
-  instead of silently concluding there was nothing to send.
+- **修复：什么都没被持久化，是因为播放器压根没写过要镜像的 cookie。** 同意 cookie（`mapi_cookie_consent`）是 `showConsentBanner` 在放行启动链之前要检查的东西，而 `api.php` 的执行顺序是 `verifyKey → showConsentBanner(callback) → get-config`——所以一条没被回答的横幅不只是关掉持久化，它会直接让播放器加载不起来。该 cookie 是 host-only 的，每次重启都随旧端口一起死掉，于是每次启动横幅都会重新出现。现在插件会在 embed 脚本**之前**就授出同意并写好 cookie，横幅再也不会渲染，`MP._cookieConsented` 也不会是 `false`。
+- 同意票同时镜像到宿主，并在下次启动时回放，所以这个回答像播放器其它记忆一样能跨过端口变化。
+- 镜像写入被拒或失败时会清掉“已发送”标记，下一轮会重试，而不是默默认为没有东西要发。
 
 ## 0.1.5
 
-> **Superseded diagnosis.** The explanation below — a changing port invalidating host-only cookies —
-> was wrong. The real cause, found in 0.1.7, is that `document.cookie` does not work at all on the
-> `dsh-app://` scheme the desktop shell serves the UI from. The mechanism introduced here (a durable
-> copy in `config.json`, restored before boot) is still what 0.1.7 builds on; only the reason stated
-> here is off. Kept as written so the record stays honest.
+> **已被推翻的诊断。** 下面这套解释——端口变化让 host-only cookie 失效——是错的。真正的原因在 0.1.7 才找到：桌面外壳提供界面所用的 `dsh-app://` 协议下，`document.cookie` 完全不工作。本版本引入的机制（在 `config.json` 里留一份持久副本、启动前恢复）依然是 0.1.7 的基础，错的只是这里给出的理由。原文保留，以便记录诚实。
 
-- **New: the player's memory now survives a DSH restart.** The player remembers itself in a cookie
-  (`mapi_state_dsh-msapi`, written `path=/; max-age=31536000` with no `domain`), but the Web GUI
-  listens on a port chosen at launch — `127.0.0.1:60472` one run, `127.0.0.1:58828` the next — and a
-  host-only cookie belongs to one origin, port included. Every launch therefore started with an
-  empty jar: volume, playback mode, last song and resume position were written and then never seen
-  again. `localStorage` has the same origin scope and would not have helped.
-- The durable copy lives in `config.json` now, owned by the host half. `GET/PUT /dsh-msapi/state`
-  stores the player's own JSON unchanged, so its `loadState` cannot tell the difference.
-- The browser half restores the cookie **before** the embed script is appended (the player reads its
-  memory once, while booting) and mirrors later writes on a 5s tick plus `pagehide`, comparing first
-  so requests track real changes rather than the player's twice-a-second rewrites.
-- A snapshot the player could not parse, or one larger than a cookie could carry, is dropped rather
-  than truncated — half a JSON document would fail on every boot.
+- **新增：播放器的记忆现在能跨过 DSH 重启。** 播放器把自身状态记在 cookie 里（`mapi_state_dsh-msapi`，写入参数 `path=/; max-age=31536000`，没有 `domain`），但 Web GUI 监听的是启动时才选的端口——这次跑在 `127.0.0.1:60472`，下次就是 `127.0.0.1:58828`——而 host-only cookie 属于某一个源，端口也算在内。于是每次启动都从空罐子开始：音量、播放模式、最后一首歌和续播位置写进去之后就再也见不到了。`localStorage` 的作用域同样是按源的，也帮不上忙。
+- 持久副本现在放在 `config.json` 里，由宿主那一半拥有。`GET/PUT /dsh-msapi/state` 原样保存播放器自己的 JSON，所以它的 `loadState` 分辨不出差别。
+- 浏览器那一半在追加 embed 脚本**之前**恢复 cookie（播放器只在启动时读一次自己的记忆），之后的写入按 5 秒一轮加 `pagehide` 镜像到宿主，并先做比较，让请求对应真实变化，而不是播放器每秒两次的重写。
+- 播放器解析不了的快照，或者大到一条 cookie 装不下的快照，是**丢弃**而不是截断——半个 JSON 文档会让每次启动都失败。
 
 ## 0.1.4
 
-- **Fixed: the lyric strip left a gap after the words and looked stretched.** Core sizes the
-  strip as `width = span.scrollWidth + 42`; that 42 is `padding: 6px 20px` plus a 2px breath, and
-  it only means the pill's *total* width under `box-sizing: border-box` — which Msapi's own
-  stylesheet sets globally (`assets/css/pc.css`: `*, *::before, *::after`). Embedded in DSH the
-  strip inherits no such reset, so the same number became a content width and 40px of padding was
-  added on top: the pill painted `scrollWidth + 82` wide against `scrollWidth + 42` of text. The
-  strip is now pinned to `border-box`, restoring the model its arithmetic was written for; the
-  skin's own padding is left untouched.
-- The strip is patched on every pass, so a strip created later (it is built lazily on the first
-  lyric line) is caught too.
+- **修复：歌词条在文字后面留下一段空隙，看起来被拉长了。** 内核把歌词条的宽度算成 `width = span.scrollWidth + 42`；这个 42 是 `padding: 6px 20px` 再加 2px 呼吸位，只有在 `box-sizing: border-box` 下才等于胶囊的**总**宽度——而 Msapi 自己的样式表是全局设了这条的（`assets/css/pc.css`：`*, *::before, *::after`）。嵌进 DSH 后歌词条不再继承这套 reset，同一个数字就变成了内容宽度，于是又额外加上 40px 内边距：胶囊实际画出来是 `scrollWidth + 82` 宽，而对齐的是 `scrollWidth + 42` 的文字。现在歌词条被钉回 `border-box`，恢复它那套算术当初假设的模型；皮肤自己的内边距保持不动。
+- 歌词条每一轮都会补一次补丁，因此后面才创建的歌词条（它是在第一行歌词到来时才懒建的）也能被覆盖到。
 
 ## 0.1.3
 
-- **Fixed: the immersive player's close button was hidden under DSH's caption bar.** The viewport
-  clips the caption strip, and the immersive layer started at `top: 0`, so its close button (which
-  the skin puts in a 60px bar at the very top) was the first thing clipped away. The layer is now
-  pushed down by the same clearance the viewport uses.
-- The fix reaches into the player's `mode: "closed"` shadow tree, which no outside selector can
-  target: the plugin appends one style element into the shadow root the player keeps on itself
-  (`_hostRoot`), and rewrites a single rule whenever the clearance changes.
-- The skin's own vertical padding is compensated rather than removed, so the close button lands
-  where its author put it relative to the layer's new top edge.
-- A newly booted player is polled briefly, because it inserts its host element before the instance
-  object exists.
+- **修复：沉浸式播放器的关闭键被 DSH 标题栏盖住。** 视口会把标题栏那条带裁掉，而沉浸层原本从 `top: 0` 开始，于是它的关闭键（皮肤把它放在最顶上一条 60px 的栏里）成了第一个被裁掉的东西。现在这一层会按视口用的同一个让开量整体下移。
+- 这个修复要伸进播放器 `mode: "closed"` 的 shadow tree，外部选择器根本够不到：插件往播放器自己保存的 shadow root（`_hostRoot`）里插入一个 style 元素，并在让开量变化时重写其中一条规则。
+- 皮肤自己的垂直内边距是**补偿**而不是删除，关闭键因此落在它作者所期望的位置——相对于这一层新的顶边。
+- 新启动的播放器会被短暂轮询，因为它插入 host 元素的时间早于实例对象存在的时间。
 
 ## 0.1.2
 
-- **Fixed: the player no longer sits under the caption buttons.** The clearance was derived purely
-  in CSS from `html[data-windows-titlebar]`; when that selector did not match, the entire
-  `clip-path` was dropped and the player painted over the native minimise / maximise / close
-  buttons. It is now measured in JavaScript from the same inline property DSH's preload writes
-  (`--dsh-windows-titlebar-height`), with the marker attribute as a fallback, and applied inline on
-  the container — no selector stands between the value and the clip any more.
-- **New: the player area is draggable.** A 10px handle on the viewport's top edge moves the whole
-  area down, out of the way of anything covering it, and follows the clearance through fullscreen
-  changes.
-- The clearance is re-measured when fullscreen is entered or left and on resize, instead of being
-  read once at mount.
+- **修复：播放器不再压在标题栏按钮下面。** 让开量原本纯粹靠 CSS 从 `html[data-windows-titlebar]` 推导；当那个选择器没命中时，整条 `clip-path` 被丢掉，播放器就画到了原生的最小化/最大化/关闭按钮上。现在改为在 JavaScript 里读 DSH 预加载脚本写入的同一个内联属性（`--dsh-windows-titlebar-height`），标记属性只作兜底，然后内联应用到容器上——数值与裁剪之间不再隔着任何选择器。
+- **新增：播放器区域可以拖动。** 视口顶边上一根 10px 的手柄能把整块区域往下挪，避开压住它的东西，并跟随全屏变化重新对齐让开量。（该手柄已在 0.1.10 删除，原因见该条目。）
+- 让开量改为在进入/离开全屏以及窗口尺寸变化时重新测量，而不是挂载时读一次就完事。
 
 ## 0.1.1
 
-- **The viewport no longer covers DSH's caption bar.** The container is clipped from the top by
-  DSH's own markers instead of a hardcoded number: `data-windows-titlebar` with
-  `--dsh-windows-titlebar-height` (measured 40px) on Windows, a 48px strip on macOS, and zero
-  clearance in fullscreen (`data-fullscreen`). `clip-path` rather than a `top` inset, so a dragged
-  player cannot paint over the caption either.
-- The player's toast layer is pushed below the caption bar. It is pinned at `top: 16px`, inside the
-  clipped strip, so error messages would otherwise have been invisible.
-- The docked player is lifted above the composer (96px) once, in JavaScript, instead of with an
-  `!important` stylesheet rule — the rule would have won over the user's own drag.
+- **视口不再盖住 DSH 的标题栏。** 容器改为按 DSH 自己的标记从顶部裁剪，而不是用一个硬编码数字：Windows 上是 `data-windows-titlebar` 配合 `--dsh-windows-titlebar-height`（实测 40px），macOS 上让开 48px，全屏时（`data-fullscreen`）让开量为零。用 `clip-path` 而不是 `top` 内缩，这样即使播放器被拖动也无法画到标题栏上。
+- 播放器的 toast 层被推到标题栏条带下方。它固定写在 `top: 16px`，本来落在被裁掉的条带里，错误提示会看不见。
+- 被 dock 的播放器改为在 JavaScript 里一次性抬高到输入框之上（96px），而不是用一条 `!important` 样式规则——那条规则会压过用户自己的拖动。
 
 ## 0.1.0
 
-First release.
+首个版本。
 
-- Settings → **Music Player** page with two inputs: site URL and API key. An empty URL means the
-  official site `https://msapi.bmwy72.top`.
-- `GET/PUT /dsh-msapi/settings`, `POST /dsh-msapi/probe`, `GET/PUT /dsh-msapi/player` on the host
-  half; mutations require the GUI's signed session cookie.
-- Saving probes `action=manifest` once and reports reachability, key state, playlist and song
-  counts in a single status line. `verify-key` is deliberately avoided: Msapi rate limits it to
-  five calls per minute per IP.
-- Gateway discovery tries the remembered path, then `/admin/api/api.php`, then `/api/api.php`.
-- The player is embedded with `<script src="<site>/api.php?key=…&data-player-id=dsh-msapi">` and
-  moved into a plugin-owned viewport container whose `transform` makes it the containing block, so
-  the player's full-screen layer covers that box instead of the whole window.
-- Teardown destroys the player instance, removes its host element, its toast layer, the injected
-  script and the viewport; a late-booting instance is swept for twelve seconds after teardown.
-- Configuration lives in `$DSH_HOME/dsh-msapi/config.json` (mode 0600, atomic write, corrupt files
-  moved aside). The key is never returned to the browser — only a SHA-256 fingerprint.
+- 设置 → **音乐播放器** 页面，只有两个输入：服务地址与接口密钥。地址留空即表示官方站点 `https://msapi.bmwy72.top`。
+- 宿主侧提供 `GET/PUT /dsh-msapi/settings`、`POST /dsh-msapi/probe`、`GET/PUT /dsh-msapi/player`；写操作需要 GUI 的签名会话 cookie。
+- 保存时探测一次 `action=manifest`，在一行状态里报出可达性、密钥状态、歌单与歌曲数量。**故意不调** `verify-key`：Msapi 把它限流到每 IP 每分钟五次。
+- 网关发现顺序：先试记住的路径，再试 `/admin/api/api.php`，最后试 `/api/api.php`。
+- 播放器通过 `<script src="<站点>/api.php?key=…&data-player-id=dsh-msapi">` 嵌入，然后被搬进插件自己的视口容器；容器的 `transform` 使它成为包含块，于是播放器的全屏层只覆盖这个盒子，而不是整个窗口。
+- 卸载时会销毁播放器实例、移除它的 host 元素、toast 层、注入的脚本与视口；卸载后 12 秒内仍在扫描晚启动的实例。
+- 配置放在 `$DSH_HOME/dsh-msapi/config.json`（权限 0600、原子写入、损坏文件移走）。密钥永不回传浏览器——只给一个 SHA-256 指纹。
