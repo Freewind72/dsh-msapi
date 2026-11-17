@@ -230,12 +230,13 @@ Embedded in DSH the strip inherits no such reset, so the same `width` becomes a 
 text. That surplus is the gap after the words, and the skewed ratio is what reads as "deformed".
 The plugin pins the strip back to `border-box` and leaves the skin's padding alone.
 
-### Moving the player area
+### Where the player area sits
 
-A 10px handle sits on the viewport's top edge and turns blue on hover. Dragging it moves the whole
-player area down, out of the way of anything covering it; drag it back to the minimum and it sits
-just below the caption bar. The handle follows the clearance automatically and moves to the very
-top in fullscreen. The position is remembered for the session only.
+The area's top edge is pinned to the strip DSH reserves for its caption buttons. That height is
+measured on every mount, resize and fullscreen change, and the container is clipped there, so no
+part of the player can paint over the native minimise / maximise / close buttons. The edge cannot
+be moved by hand: there is no handle to drag, so nothing can be dragged over the player and hide
+it.
 
 ## Security
 

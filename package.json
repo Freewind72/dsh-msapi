@@ -1,6 +1,6 @@
 {
   "name": "dsh-msapi",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "为 DeepSeek Harness 嵌入 Msapi 音乐播放器：在设置页填好站点地址与接口密钥，播放器就会挂进 DSH 窗口，并由插件控制它的视口范围。",
   "type": "module",
   "main": "./lib/index.js",

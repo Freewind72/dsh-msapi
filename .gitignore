@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.npm/
+
+# Package-manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Packed tarballs (npm pack / pnpm pack output)
+*.tgz
+
+# Tool caches and coverage output
+.cache/
+coverage/
+.nyc_output/
+.eslintcache
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Editors
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating system junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
